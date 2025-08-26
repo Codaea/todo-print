@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <!-- Persist Plugin -->
+  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
+  <!-- Alpine Core -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Todo Printer</title>
+</head>
+
+<body>
+  <h1>Send Task To Printer</h1>
+  <div x-data="init">
+
+    <div @keyup.enter="sendToPrinter()">
+      <p>Task</p>
+      <input type="text" x-model="task" x-ref="task" />
+      <p>Sub Task 1 (Completly Optional)</p>
+      <input type="text" x-model="subTasks[0]" />
+      <p>Sub Task 2</p>
+      <input type="text" x-model="subTasks[1]" />
+      <p>Sub Task 3</p>
+      <input type="text" x-model="subTasks[2]" />
+      <p>Est. Time</p>
+      <input type="text" x-model="estTime" />
+    </div>
+    <button @click="sendToPrinter">Print Task</button>
+    <div>
+      <h3>Printer Setup</h3>
+      <p>Printer IP:PORT</p>
+      <input type="text" x-model="printerAddress">
+    </div>
+    <div x-data="{ open :false }">
+      <h3>Answers to life (and maybe a QA)</h3>
+      <button @click="open = !open" x-text="open ? 'Hide' : 'TELL ME (Show Dropdown)'"></button>
+      <div x-show="open">
+        <h4>What is this site?</h4>
+        <p>I keep track of all the tasks i have to do with a ticket rail and receipt printer. Wether or not it keeps me from failing college is yet to be determined,
+          but i sure hope it does. It links up with <a href="https://github.com/codaea/simpleprint">Simpleprint</a>, a
+          little print server for my thermal printer (or yours too, if you want). 
+        </p>
+        <h4>Why only 3 subtasks?</h4>
+        <p>Breaking tasks down too much can result in overfragmentation, and instead of doing anything productive, you
+          just made
+          a big list. Don't make a big list. </p>
+
+        <h4>Got any cool shortcuts?</h4>
+        <p>Yes! pressing enter at any point will print the task. (so don't press it on accident!) </p>
+        <h4>But does it cookie?</h4>
+        <p>Yes. Yes it does. Without your permission! but only to store the printer setup because it needs to remember
+          where to send the print jobs. (and that would suck to type in every time). It also tells me your location,
+          Kathy.</p>
+        <h4>Meaning of life?</h4>
+        <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">42.</a>
+      </div>
+    </div>
+    <p style="position: absolute; bottom: 10px; left: 10px;">Made With &lt;3 By <a style="color: blue;" target="_blank" rel="noopener noreferrer" href="https://codaea.com">Codaea</a></p>
+  </div>
+  <script>
+
+    document.addEventListener('alpine:init', () => {
+      Alpine.data('init', () => ({
+        task: '',
+        subTasks: ['', '', ''],
+        estTime: '',
+        printerAddress: Alpine.$persist('IP:PORT'),
+        sendToPrinter() {
+          console.log(this.task)
+          const receipt = [
+            {
+              type: "feed",
+              lines: 2
+            },
+            {
+              type: "line",
+              content: this.task,
+              font_size: 3,
+              font: "A",
+              alignment: "center",
+              underline: false,
+            }
+          ];
+          if (this.subTasks[0] !== '' || this.subTasks[1] !== '' || this.subTasks[2] !== '') {
+            receipt.push({
+              type: "line",
+              content: "Subtasks:",
+              font_size: 2,
+              font: "A",
+              alignment: "left",
+              underline: false,
+            });
+
+            let subTasksContent = '';
+            for (const item of this.subTasks) {
+              if (item !== '') {
+                subTasksContent += `- ${item}\n`;
+              }
+            }
+
+            receipt.push({
+              type: "text",
+              content: subTasksContent,
+              font_size: 1,
+              font: "A",
+              alignment: "left",
+              underline: false
+            });
+          }
+
+          if (this.estTime !== '') {
+            receipt.push({
+              type: "line",
+              content: `Est. Time: ${this.estTime}`,
+              font_size: 1,
+              font: "A",
+              alignment: "left",
+              underline: true
+            });
+          }
+
+          const payload = {
+            "receipt": receipt
+          }
+
+          console.log("sending to printer @ " + this.printerAddress)
+          console.log(payload)
+          // send shit to printer
+          fetch(this.printerAddress + "/print", {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+          });
+
+          // reset all fields to blank
+          this.task = '';
+          this.subTasks = ['', '', ''];
+          this.estTime = '';
+
+          // refocus task box
+          this.$refs.task.focus();
+        }
+      }))
+    })
+
+  </script>
+</body>
+
+</html>
