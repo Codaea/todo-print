@@ -31,8 +31,10 @@
     <button @click="sendToPrinter">Print Task</button>
     <div>
       <h3>Printer Setup</h3>
-      <p>Printer IP:PORT</p>
+      <p>Printer http://IP:PORT</p>
       <input type="text" x-model="printerAddress">
+      <p>Pre-Feed lines (how much feed at the top)</p>
+      <input type="number" x-model="preFeed">
     </div>
     <div x-data="{ open :false }">
       <h3>Answers to life (and maybe a QA)</h3>
@@ -67,13 +69,14 @@
         task: '',
         subTasks: ['', '', ''],
         estTime: '',
+        preFeed: Alpine.$persist(2),
         printerAddress: Alpine.$persist('IP:PORT'),
         sendToPrinter() {
           console.log(this.task)
           const receipt = [
             {
               type: "feed",
-              lines: 2
+              lines: this.preFeed
             },
             {
               type: "line",
