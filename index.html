@@ -19,7 +19,9 @@
     <div @keyup.enter="sendToPrinter()">
       <p>Task</p>
       <input type="text" x-model="task" x-ref="task" />
-      <p>Sub Task 1 (Completly Optional)</p>
+      <p>Description (opt)</p>
+      <input type="text" x-model="description" />
+      <p>Sub Task 1 (opt)</p>
       <input type="text" x-model="subTasks[0]" />
       <p>Sub Task 2</p>
       <input type="text" x-model="subTasks[1]" />
@@ -67,6 +69,7 @@
     document.addEventListener('alpine:init', () => {
       Alpine.data('init', () => ({
         task: '',
+        description: '',
         subTasks: ['', '', ''],
         estTime: '',
         preFeed: Alpine.$persist(2),
@@ -87,6 +90,17 @@
               underline: false,
             }
           ];
+
+          if (this.description !== '') {
+            receipt.push({
+              type: "line",
+              content: this.description,
+              font_size: 1,
+              font: "A",
+              alignment: "left",
+              underline: false,
+            })
+          }
           if (this.subTasks[0] !== '' || this.subTasks[1] !== '' || this.subTasks[2] !== '') {
             receipt.push({
               type: "line",
@@ -96,7 +110,6 @@
               alignment: "left",
               underline: false,
             });
-
             let subTasksContent = '';
             for (const item of this.subTasks) {
               if (item !== '') {
